@@ -22,5 +22,7 @@ steps:
         packagename: "" 
         packageversion: "latest"
         path: $(Build.SourcesDirectory)/folderPackage
+        nugetURL: "https://nuget.pkg.github.com/{organisation}/{packagename}/index.json"
+        nugetversionURL: "https://nuget.pkg.github.com/{organisation}/download/{packagename}/{packageversion}/{packagename}.{packageversion}.nupkg"
 
 ```
