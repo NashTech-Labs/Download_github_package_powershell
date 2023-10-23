@@ -1,5 +1,5 @@
 # Download_github_package_powershell
-Downloading the github package from the github through the powershell script. We can download any version or latest version of github
+Download the package from GitHub through the Powershell script. We can download any version or the latest version of GitHub.
 
 ### Usage
 To use this template, follow these steps:
@@ -14,7 +14,7 @@ resources:
     - repository: download
       type: github
       name: {repo}
-      ref: <respective branch name>
+      ref: <branch name>
       endpoint: '{}'
 steps:
 - template: downloadpackage.yml@download
