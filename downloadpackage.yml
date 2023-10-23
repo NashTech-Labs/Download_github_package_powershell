@@ -1,0 +1,48 @@
+parameters:
+- name: packageversion
+  type: string 
+- name: packagename
+  type: string
+- name: path
+  type: string
+  default: $(Build.SourcesDirectory)
+- name: nugetURL
+  type: string
+  default: "https://nuget.pkg.github.com/{organisation}/{packagename}/index.json"
+- name: nugetversionURL
+  type: string
+  default: "https://nuget.pkg.github.com/{organisation}/download/{packagename}/{packageversion}/{packagename}.{packageversion}.nupkg"
+  
+steps:
+- pwsh: |
+    try{
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      $base64EncodedAccessToken = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $env:AccessToken)))
+      $headers = @{
+          Authorization = ("Basic {0}" -f $base64EncodedAccessToken)
+      }
+      if(-not (Test-Path "${{ parameters.path }}")){
+        echo "Creating new ${{ parameters.path }} folder"
+        ni -Path "${{ parameters.path }}" -ItemType Directory -Force
+      }
+      $packageversion = "${{ parameters.packageversion }}"
+      if($packageversion.ToLower() -eq 'latest'){
+        $content = "application/json"
+        $packagedataURL = "${{ parameters.nugetURL }}".Replace("{packagename}", "${{ parameters.packagename }}")
+        Write-Host "Package Metadata URL: " $packagedataURL
+        $responseAPI = irm -Uri $packagedataURL -Method Get -content $content -Headers $headers
+        $res =  $responseAPI | ConvertTo-Json
+        Write-Output $res
+        $packageversion = $responseAPI.items[0].upper
+      }
+      Write-Host "${{ parameters.packagename }} Package Version To Deploy: " $packageversion
+      $content = "application/zip"
+      $URL = "${{ parameters.nugetversionURL}}".Replace("{packagename}", "${{ parameters.packagename }}").Replace("{packageversion}", "$packageversion")
+      irm -Uri $URL -Method Get -Headers $headers -content $content -OutFile "${{ parameters.path }}/${{ parameters.packagename }}.$($packageversion).zip"
+       
+    }
+    catch{
+      throw $_
+    }
+  env:
+    AccessToken: $(GitHubPAT)
